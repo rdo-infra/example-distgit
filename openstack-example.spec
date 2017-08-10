@@ -1,91 +1,95 @@
 %{!?upstream_version: %global upstream_version %{version}%{?milestone}}
 
 %global service example
+# Uncomment the following and edit for global description
+#%global common_desc \
+#Example is a service for OpenStack cloud.  \
+#It does examplefunction. \
+#The goal is exampletarget.
 
-Name:		openstack-%{service}
-Version:    XXX
-Release:    XXX
-Summary:	OpenStack Example Service
-License:	ASL 2.0
-URL:		http://launchpad.net/%{service}/
+Name:           openstack-%{service}
+Version:        XXX
+Release:        XXX
+Summary:        OpenStack Example Service
+License:        ASL 2.0
+URL:            http://launchpad.net/%{service}/
 
-Source0:	http://tarballs.openstack.org/%{service}/%{service}-master.tar.gz
-Source1:	%{service}.logrotate
-Source2:	openstack-example-server.service
-Source3:    %{service}-dist.conf
+Source0:        http://tarballs.openstack.org/%{service}/%{service}-%{upstream_version}.tar.gz
+Source1:        %{service}.logrotate
+Source2:        openstack-example-server.service
+Source3:        %{service}-dist.conf
 
-BuildArch:	noarch
+BuildArch:      noarch
 
-BuildRequires:	python2-devel
-BuildRequires:	python-pbr
-BuildRequires:	python-setuptools
+BuildRequires:  python2-devel
+BuildRequires:  python-pbr
+BuildRequires:  python-setuptools
 BuildRequires:  git
-BuildRequires:	systemd
-BuildRequires:	systemd-units
+BuildRequires:  openstack-macros
+BuildRequires:  systemd
+BuildRequires:  systemd-units
 # Required to compile translation files
 BuildRequires:  python-babel
 
-Requires:	openstack-%{service}-common = %{version}-%{release}
+Requires:       openstack-%{service}-common = %{version}-%{release}
 
 Requires(pre): shadow-utils
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
+%{?systemd_requires}
 
 %description
-This is the description of an example service for OpenStack.
-
+%{common_desc}
 
 %package -n python-%{service}
-Summary:	Example Python libraries
+Summary:        Example Python libraries
 
-Requires:	python-oslo-db >= 2.0
+# What dependencies are there to run this service?
+Requires:       python-oslo-db >= 2.0
 
 %description -n python-%{service}
-This is the description of an example service for OpenStack.
+%{common_desc}
 
 This package contains the Example Python library.
 
 
 %package -n python-%{service}-tests-unit
-Summary:	Example unit tests
-Requires:	python-%{service} = %{version}-%{release}
+Summary:        Example unit tests
+Requires:       python-%{service} = %{version}-%{release}
 
 %description -n python-%{service}-tests-unit
-This is the description of an example service for OpenStack.
+%{common_desc}
 
 This package contains the Example unit test files.
 
 # python-%{service}-tests package is for backwards compatibility
 # it can be ignored for new services
 %package -n python-%{service}-tests
-Summary:	Example tests meta-package
-Requires:	python-%{service}-tests-unit = %{version}-%{release}
-Requires:	python-%{service}-tests-tempest
+Summary:        Example tests meta-package
+Requires:       python-%{service}-tests-unit = %{version}-%{release}
+Requires:       python-%{service}-tests-tempest
 
 %description -n python-%{service}-tests
-This is the description of an example service for OpenStack.
+%{common_desc}
 
 This package is a meta-package for all service tests packages including
 unit and tempest tests.
 
 %package common
-Summary:	Example common files
-Requires:	python-%{service} = %{version}-%{release}
+Summary:        Example common files
+Requires:       python-%{service} = %{version}-%{release}
 
 %description common
-This is the description of an example service for OpenStack.
+%{common_desc}
 
 This package contains Example common files.
 
 %package doc
-Summary:	Example documentation
+Summary:        Example documentation
 
 BuildRequires: python-sphinx
-BuildRequires: python-oslo-sphinx
+BuildRequires: python-openstackdocstheme
 
 %description doc
-This is the description of an example service for OpenStack.
+%{common_desc}
 
 This package contains the documentation.
 
@@ -93,15 +97,15 @@ This package contains the documentation.
 %autosetup -n %{service}-%{upstream_version} -S git
 
 # Let's handle dependencies ourseleves
-rm -f *requirements.txt
+%py_req_cleanup
 
 
 %build
 %py2_build
 # generate html docs
-%{__python2} setup.py build_sphinx
+%{__python2} setup.py build_sphinx -b html
 # remove the sphinx-build leftovers
-rm -rf html/.{doctrees,buildinfo}
+rm -rf doc/build/html/.{doctrees,buildinfo}
 # Generate i18n files
 %{__python2} setup.py compile_catalog -d build/lib/%{service}/locale
 
@@ -135,6 +139,9 @@ mv %{buildroot}%{python2_sitelib}/%{service}/locale %{buildroot}%{_datadir}/loca
 
 # Find language files
 %find_lang %{service} --all-name
+
+%check
+OS_TEST_PATH=./%{service}/tests/unit %{__python2} setup.py test
 
 %pre common
 getent group %{service} >/dev/null || groupadd -r %{service}
@@ -185,7 +192,7 @@ exit 0
 
 %files doc
 %license LICENSE
-%doc html README.rst
+%doc doc/build/html
 
 %changelog
 

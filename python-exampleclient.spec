@@ -9,8 +9,13 @@
 
 %global client python-exampleclient
 %global sclient exampleclient
+%global with_doc 1
 # If a executable is provided by the package uncomment following line
 #%global executable example
+# The following is a multiline description example
+#%global common_desc \
+# This is a client library for Example built on the Example API. \
+# It provides a Python API and a command line tool (example).
 
 Name:       %{client}
 Version:    XXX
@@ -19,7 +24,7 @@ Summary:    OpenStack Example client
 License:    ASL 2.0
 URL:        http://launchpad.net/%{client}/
 
-Source0:    http://tarballs.openstack.org/%{client}/%{client}-master.tar.gz
+Source0:    http://tarballs.openstack.org/%{client}/%{client}-%{upstream_version}.tar.gz
 
 BuildArch:  noarch
 
@@ -31,12 +36,13 @@ BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
 BuildRequires:  git
+BuildRequires:  openstack-macros
 # Test requirements should be added here as BuildRequires for tests in %check
 
 Requires:   python-oslo-config >= 2:3.4.0
 
 %description -n python2-%{sclient}
-OpenStack example client
+%{common_desc}
 
 
 %package -n python2-%{sclient}-tests
@@ -46,21 +52,22 @@ Requires:   python2-%{sclient} = %{version}-%{release}
 # Test requirements should be added here as Requires.
 
 %description -n python2-%{sclient}-tests
-OpenStack example client tests
+%{common_desc}
 
 This package contains the example client test files.
 
-
+if 0%{?with_doc}
 %package -n python-%{sclient}-doc
 Summary:    OpenStack example client documentation
 
 BuildRequires: python-sphinx
-BuildRequires: python-oslo-sphinx
+BuildRequires: python-openstackdocstheme
 
 %description -n python-%{sclient}-doc
-OpenStack example client documentation
+%{common_desc}
 
 This package contains the documentation.
+%endif
 
 %if 0%{?with_python3}
 %package -n python3-%{sclient}
@@ -76,7 +83,7 @@ BuildRequires:  git
 Requires:   python3-oslo-config >= 2:3.4.0
 
 %description -n python3-%{sclient}
-OpenStack example client
+%{common_desc}
 
 
 %package -n python3-%{sclient}-tests
@@ -94,14 +101,14 @@ This package contains the example client test files.
 
 
 %description
-OpenStack example library.
+%{common_desc}
 
 
 %prep
 %autosetup -n %{client}-%{upstream_version} -S git
 
 # Let's handle dependencies ourseleves
-rm -f *requirements.txt
+%py_req_cleanup
 
 %build
 %py2_build
@@ -109,10 +116,12 @@ rm -f *requirements.txt
 %py3_build
 %endif
 
+%if 0%{?with_doc}
 # generate html docs
-%{__python2} setup.py build_sphinx
+%{__python2} setup.py build_sphinx -b html
 # remove the sphinx-build leftovers
-rm -rf html/.{doctrees,buildinfo}
+rm -rf doc/build/html/.{doctrees,buildinfo}
+%endif
 
 # If the client has man page uncomment following line
 # %{__python2} setup.py build_sphinx --builder man
@@ -138,10 +147,11 @@ rm -rf html/.{doctrees,buildinfo}
 %{__python3} setup.py test
 rm -rf .testrepository
 %endif
-%{__python2} setup.py test
+%{__python2} setup.py testr
 
 %files -n python2-%{sclient}
 %license LICENSE
+%doc README.rst
 %{python2_sitelib}/%{sclient}
 %{python2_sitelib}/*.egg-info
 %exclude %{python2_sitelib}/%{sclient}/tests
@@ -154,16 +164,18 @@ rm -rf .testrepository
 #%endif
 
 %files -n python2-%{sclient}-tests
-%license LICENSE
 %{python2_sitelib}/%{sclient}/tests
 
+%if 0%{?with_doc}
 %files -n python-%{sclient}-doc
 %license LICENSE
-%doc html README.rst
+%doc doc/build/html
+%endif
 
 %if 0%{?with_python3}
 %files python3-%{sclient}
 %license LICENSE
+%doc README.rst
 %{python3_sitelib}/%{sclient}
 %{python3_sitelib}/*.egg-info
 %exclude %{python3_sitelib}/%{sclient}/tests
@@ -174,9 +186,7 @@ rm -rf .testrepository
 #%{_bindir}/%{executable}-%{python3_version}
 #%endif
 
-
 %files -n python3-%{library}-tests
-%license LICENSE
 %{python3_sitelib}/%{sclient}/tests
 %endif # with_python3
 
