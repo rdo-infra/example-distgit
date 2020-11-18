@@ -35,7 +35,7 @@ Summary:    OpenStack Example client
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
-BuildRequires:  git
+BuildRequires:  git-core
 BuildRequires:  openstack-macros
 # Test requirements should be added here as BuildRequires for tests in %check
 
@@ -77,7 +77,7 @@ Summary:    OpenStack Example client
 BuildRequires:  python3-devel
 BuildRequires:  python3-pbr
 BuildRequires:  python3-setuptools
-BuildRequires:  git
+BuildRequires:  git-core
 # Test requirements should be added here as BuildRequires if adding tests in %check
 
 Requires:   python3-oslo-config >= 2:3.4.0

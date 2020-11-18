@@ -22,7 +22,7 @@ BuildRequires: python-setuptools
 BuildRequires: python-pbr
 BuildRequires: python-sphinx
 BuildRequires: python-oslo-sphinx
-BuildRequires: git
+BuildRequires: git-core
 # Required to compile translation files
 BuildRequires: python-django
 # openstack-dashboard is probably required for running tests

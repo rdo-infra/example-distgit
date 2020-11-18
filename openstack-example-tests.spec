@@ -16,7 +16,7 @@ BuildArch:      noarch
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
-BuildRequires:  git
+BuildRequires:  git-core
 
 Requires:       python-pbr
 Requires:       python-setuptools

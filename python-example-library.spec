@@ -28,7 +28,7 @@ Summary:    OpenStack Example library
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
-BuildRequires:  git
+BuildRequires:  git-core
 # Required to compile translation files (add only if exist)
 BuildRequires:  python-babel
 
@@ -76,7 +76,7 @@ Summary:    OpenStack Example library
 BuildRequires:  python3-devel
 BuildRequires:  python3-pbr
 BuildRequires:  python3-setuptools
-BuildRequires:  git
+BuildRequires:  git-core
 
 Requires:   python3-oslo-config >= 2:3.4.0
 # If translation files exist

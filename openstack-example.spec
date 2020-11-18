@@ -24,7 +24,7 @@ BuildArch:      noarch
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
-BuildRequires:  git
+BuildRequires:  git-core
 BuildRequires:  openstack-macros
 BuildRequires:  systemd
 BuildRequires:  systemd-units
