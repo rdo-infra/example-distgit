@@ -9,6 +9,7 @@
 
 %global library example-library
 %global module example_library
+%global with_doc 1
 
 Name:       python-%{library}
 Version:    XXX
@@ -50,6 +51,7 @@ OpenStack example library.
 This package contains the example library test files.
 
 
+%if 0%{?with_doc}
 %package -n python-%{library}-doc
 Summary:    OpenStack example library documentation
 
@@ -60,6 +62,7 @@ BuildRequires: python-oslo-sphinx
 OpenStack example library.
 
 This package contains the documentation.
+%endif
 
 # Add python-%{library}-lang if translation files exist
 %package  -n python-%{library}-lang
@@ -114,10 +117,12 @@ rm -f *requirements.txt
 %py3_build
 %endif
 
+%if 0%{?with_doc}
 # generate html docs
 %{__python2} setup.py build_sphinx
 # remove the sphinx-build leftovers
 rm -rf html/.{doctrees,buildinfo}
+%endif
 
 # Generate i18n files if translation files exist
 %{__python2} setup.py compile_catalog -d build/lib/%{module}/locale
@@ -158,9 +163,11 @@ rm -rf .testrepository
 %license LICENSE
 %{python2_sitelib}/%{module}/tests
 
+%if 0%{?with_doc}
 %files -n python-%{library}-doc
 %license LICENSE
 %doc html README.rst
+%endif
 
 # Only if translation files exist
 %files -n python-%{library}-lang -f %{module}.lang

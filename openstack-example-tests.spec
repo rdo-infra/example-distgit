@@ -3,6 +3,7 @@
 %global pname example_tests
 
 %global service example-tests
+%global with_doc 1
 Name:           openstack-%{service}
 Version:        XXX
 Release:        XXX
@@ -29,6 +30,7 @@ BuildRequires:  python-coverage
 %description
 This project contains example test framework.
 
+%if 0%{?with_doc}
 %package -n openstack-%{service}-doc
 Summary:        OpenStack example tests Documentation
 
@@ -38,6 +40,7 @@ Requires:    %{name} = %{version}-%{release}
 
 %description -n openstack-%{service}-doc
 It contains the documentation of example package.
+%endif
 
 %prep
 %setup -q -n %{service}-%{upstream_version}
@@ -47,10 +50,12 @@ rm -f test-requirements.txt requirements.txt
 %build
 %{__python2} setup.py build
 
+%if 0%{?with_doc}
 # Build Documentation
 %{__python2} setup.py build_sphinx
 # remove the sphinx-build leftovers
 rm -rf html/.{doctrees,buildinfo}
+%endif
 
 
 %install
@@ -72,8 +77,10 @@ mv %{buildroot}/usr/etc/* %{buildroot}%{_sysconfdir}/
 %{_bindir}/<test binary>
 %{_sysconfdir}/<config path>/*
 
+%if 0%{?with_doc}
 %files -n openstack-%{example}-doc
 %license LICENSE
 %doc html
+%endif
 
 %changelog

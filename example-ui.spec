@@ -2,6 +2,7 @@
 
 %global pypi_name example-dashboard
 %global mod_name example_dashboard
+%global with_doc 1
 
 # tests are disabled by default
 %bcond_with tests
@@ -20,8 +21,6 @@ BuildArch:     noarch
 BuildRequires: python2-devel
 BuildRequires: python-setuptools
 BuildRequires: python-pbr
-BuildRequires: python-sphinx
-BuildRequires: python-oslo-sphinx
 BuildRequires: git-core
 # Required to compile translation files
 BuildRequires: python-django
@@ -37,10 +36,16 @@ Requires: python-pbr
 %description
 openstack-example-ui is a dashboard for example service
 
+%if 0%{?with_doc}
 %package doc
 Summary: Documentation for example dashboard
+
+BuildRequires: python-sphinx
+BuildRequires: python-oslo-sphinx
+
 %description doc
 Documentation files for example dashboard
+%endif
 
 %prep
 %autosetup -n %{pypi_name}-%{upstream_version} -S git
@@ -55,10 +60,13 @@ rm -rf {test-,}requirements.txt tools/{pip,test}-requires
 pushd build/lib/%{mod_name}
 django-admin compilemessages
 popd
+
+%if 0%{?with_doc}
 # Build html documentation
 %{__python2} setup.py build_sphinx
 # remove the sphinx-build leftovers
 rm -rf html/.{doctrees,buildinfo}
+%endif
 
 %install
 %py2_install
@@ -87,9 +95,11 @@ rm -f %{buildroot}%{python2_sitelib}/%{mod_name}/locale/*pot
 %{python2_sitelib}/*.egg-info
 %{_datadir}/openstack-dashboard/openstack_dashboard/local/enabled/_XXX_example*
 
+%if 0%{?with_doc}
 %files doc
 %doc html
 %license LICENSE
+%endif
 
 %changelog
 

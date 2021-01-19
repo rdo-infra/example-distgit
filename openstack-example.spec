@@ -1,6 +1,7 @@
 %{!?upstream_version: %global upstream_version %{version}%{?milestone}}
 
 %global service example
+%global with_doc 1
 # Uncomment the following and edit for global description
 #%global common_desc \
 #Example is a service for OpenStack cloud.  \
@@ -82,6 +83,7 @@ Requires:       python-%{service} = %{version}-%{release}
 
 This package contains Example common files.
 
+%if 0%{?with_doc}
 %package doc
 Summary:        Example documentation
 
@@ -92,6 +94,7 @@ BuildRequires: python-openstackdocstheme
 %{common_desc}
 
 This package contains the documentation.
+%endif
 
 %prep
 %autosetup -n %{service}-%{upstream_version} -S git
@@ -102,10 +105,13 @@ This package contains the documentation.
 
 %build
 %py2_build
+
+%if 0%{?with_doc}
 # generate html docs
 %{__python2} setup.py build_sphinx -b html
 # remove the sphinx-build leftovers
 rm -rf doc/build/html/.{doctrees,buildinfo}
+%endif
 # Generate i18n files
 %{__python2} setup.py compile_catalog -d build/lib/%{service}/locale
 
@@ -190,9 +196,11 @@ exit 0
 %dir %{_sharedstatedir}/%{service}
 %dir %attr(0750, %{service}, root) %{_localstatedir}/log/%{service}
 
+%if 0%{?with_doc}
 %files doc
 %license LICENSE
 %doc doc/build/html
+%endif
 
 %changelog
 
