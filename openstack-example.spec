@@ -1,3 +1,7 @@
+%{!?sources_gpg: %{!?dlrn:%global sources_gpg 1} }
+# %global sources_gpg_sign <get the Cryptographic Signatures of current release from https://releases.openstack.org/#cryptographic-signatures>
+%global sources_gpg_sign 0x2426b928085a020d8a90d0d879ab7008d0896c8a
+
 %{!?upstream_version: %global upstream_version %{version}%{?milestone}}
 
 %global service example
@@ -15,18 +19,27 @@ Summary:        OpenStack Example Service
 License:        ASL 2.0
 URL:            http://launchpad.net/%{service}/
 
-Source0:        http://tarballs.openstack.org/%{service}/%{service}-%{upstream_version}.tar.gz
+Source0:        https://tarballs.openstack.org/%{service}/%{service}-%{upstream_version}.tar.gz
 Source1:        %{service}.logrotate
 Source2:        openstack-example-server.service
 Source3:        %{service}-dist.conf
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+Source101:      https://tarballs.openstack.org/%{service}/%{service}-%{upstream_version}.tar.gz.asc
+Source102:      https://releases.openstack.org/_static/%{sources_gpg_sign}.txt
+%endif
 
 BuildArch:      noarch
 
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+BuildRequires:  /usr/bin/gpgv2
+BuildRequires:  openstack-macros
+%endif
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
 BuildRequires:  git-core
-BuildRequires:  openstack-macros
 BuildRequires:  systemd
 BuildRequires:  systemd-units
 # Required to compile translation files
@@ -97,6 +110,10 @@ This package contains the documentation.
 %endif
 
 %prep
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+%{gpgverify}  --keyring=%{SOURCE102} --signature=%{SOURCE101} --data=%{SOURCE0}
+%endif
 %autosetup -n %{service}-%{upstream_version} -S git
 
 # Let's handle dependencies ourseleves
