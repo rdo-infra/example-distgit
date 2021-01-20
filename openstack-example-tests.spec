@@ -1,3 +1,7 @@
+%{!?sources_gpg: %{!?dlrn:%global sources_gpg 1} }
+# %global sources_gpg_sign <get the Cryptographic Signatures of current release from https://releases.openstack.org/#cryptographic-signatures>
+%global sources_gpg_sign 0x2426b928085a020d8a90d0d879ab7008d0896c8a
+
 %{!?upstream_version: %global upstream_version %{version}%{?milestone}}
 
 %global pname example_tests
@@ -11,9 +15,19 @@ Summary:        Example Test Framework
 License:        ASL 2.0
 URL:            http://launchpad.net/%{service}/
 
-Source0:        http://tarballs.openstack.org/%{service}/%{service}-master.tar.gz
+Source0:        https://tarballs.openstack.org/%{service}/%{service}-master.tar.gz
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+Source101:      https://tarballs.openstack.org/%{service}/%{service}-master.tar.gz.asc
+Source102:      https://releases.openstack.org/_static/%{sources_gpg_sign}.txt
+%endif
 BuildArch:      noarch
 
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+BuildRequires:  /usr/bin/gpgv2
+BuildRequires:  openstack-macros
+%endif
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
@@ -43,6 +57,10 @@ It contains the documentation of example package.
 %endif
 
 %prep
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+%{gpgverify}  --keyring=%{SOURCE102} --signature=%{SOURCE101} --data=%{SOURCE0}
+%endif
 %setup -q -n %{service}-%{upstream_version}
 # Let RPM handle the dependencies
 rm -f test-requirements.txt requirements.txt

@@ -1,3 +1,7 @@
+%{!?sources_gpg: %{!?dlrn:%global sources_gpg 1} }
+# %global sources_gpg_sign <get the Cryptographic Signatures of current release from https://releases.openstack.org/#cryptographic-signatures>
+%global sources_gpg_sign 0x2426b928085a020d8a90d0d879ab7008d0896c8a
+
 # This spec can be used for packaging of tempest plugin when residing in
 # a separate project as designate-tempest-plugin. For tempest plugins included
 # in main project git repo, it should be a sub-package of openstack-<service>.
@@ -19,7 +23,12 @@ Summary:    Tempest Integration of example
 License:    ASL 2.0
 URL:        https://github.com/openstack/%{plugin}/
 
-Source0:    http://tarballs.openstack.org/%{plugin}/%{plugin}-%{version}.tar.gz
+Source0:    https://tarballs.openstack.org/%{plugin}/%{plugin}-%{version}.tar.gz
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+Source101:  https://tarballs.openstack.org/%{plugin}/%{plugin}-%{version}.tar.gz.asc
+Source102:  https://releases.openstack.org/_static/%{sources_gpg_sign}.txt
+%endif
 
 BuildArch:  noarch
 
@@ -27,6 +36,11 @@ BuildArch:  noarch
 This package contains Tempest tests to cover the example project.
 Additionally it provides a plugin to automatically load these tests into tempest.
 
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+BuildRequires:  /usr/bin/gpgv2
+BuildRequires:  openstack-macros
+%endif
 
 %package -n python2-%{service}-tests-tempest
 Summary: %{summary}
@@ -35,7 +49,6 @@ BuildRequires:  python2-devel
 BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
 BuildRequires:  git-core
-BuildRequires:  openstack-macros
 
 Requires:   python-xxxxx >= a.b.c
 
@@ -71,6 +84,10 @@ Additionally it provides a plugin to automatically load these tests into tempest
 
 
 %prep
+# Required for tarball sources verification
+%if 0%{?sources_gpg} == 1
+%{gpgverify}  --keyring=%{SOURCE102} --signature=%{SOURCE101} --data=%{SOURCE0}
+%endif
 %autosetup -n %{plugin}-%{upstream_version} -S git
 
 # remove requirements
