@@ -143,7 +143,6 @@ install -d -m 755 %{buildroot}%{_localstatedir}/log/%{service}
 # Move config files to proper location
 install -d -m 755 %{buildroot}%{_sysconfdir}/%{service}
 mv %{buildroot}/usr/etc/%{service}/* %{buildroot}%{_sysconfdir}/%{service}
-mv %{buildroot}%{_sysconfdir}/%{service}/api-paste.ini %{buildroot}%{_datadir}/%{service}/api-paste.ini
 
 # Install dist conf
 install -p -D -m 640 %{SOURCE3} %{buildroot}%{_datadir}/%{service}/%{service}-dist.conf
@@ -187,7 +186,7 @@ exit 0
 %license LICENSE
 %{_bindir}/openstack-example-server
 %{_unitdir}/openstack-example-server.service
-%attr(-, root, %{service}) %{_datadir}/%{service}/api-paste.ini
+%attr(-, root, %{service}) %{_sysconfdir}/%{service}/api-paste.ini
 
 
 %files -n python-%{service}-tests-unit
