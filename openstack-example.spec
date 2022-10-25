@@ -36,14 +36,14 @@ BuildArch:      noarch
 BuildRequires:  /usr/bin/gpgv2
 BuildRequires:  openstack-macros
 %endif
-BuildRequires:  python2-devel
-BuildRequires:  python-pbr
-BuildRequires:  python-setuptools
+BuildRequires:  python3-devel
+BuildRequires:  python3-pbr
+BuildRequires:  python3-setuptools
 BuildRequires:  git-core
 BuildRequires:  systemd
 BuildRequires:  systemd-units
 # Required to compile translation files
-BuildRequires:  python-babel
+BuildRequires:  python3-babel
 
 Requires:       openstack-%{service}-common = %{version}-%{release}
 
@@ -53,61 +53,65 @@ Requires(pre): shadow-utils
 %description
 %{common_desc}
 
-%package -n python-%{service}
+%package -n python3-%{service}
 Summary:        Example Python libraries
 
 # What dependencies are there to run this service?
-Requires:       python-oslo-db >= 2.0
+Requires:       python3-oslo-db >= 2.0
 
-%description -n python-%{service}
+%description -n python3-%{service}
 %{common_desc}
 
 This package contains the Example Python library.
 
 
-%package -n python-%{service}-tests-unit
+%package -n python3-%{service}-tests
 Summary:        Example unit tests
-Requires:       python-%{service} = %{version}-%{release}
+Requires:       python3-%{service} = %{version}-%{release}
+# testing framework packages required to run unit tests or any additional package
+# which is not required for python3-%{service} but it is for unit tests.
+Requires:       python3-stestr
 
-%description -n python-%{service}-tests-unit
+%description -n python3-%{service}-tests
 %{common_desc}
 
 This package contains the Example unit test files.
 
-# python-%{service}-tests package is for backwards compatibility
-# it can be ignored for new services
-%package -n python-%{service}-tests
-Summary:        Example tests meta-package
-Requires:       python-%{service}-tests-unit = %{version}-%{release}
-Requires:       python-%{service}-tests-tempest
-
-%description -n python-%{service}-tests
-%{common_desc}
-
-This package is a meta-package for all service tests packages including
-unit and tempest tests.
-
 %package common
 Summary:        Example common files
-Requires:       python-%{service} = %{version}-%{release}
+Requires:       python3-%{service} = %{version}-%{release}
 
 %description common
 %{common_desc}
 
+# Tipically we create a subpackage for each independen service as api or conductor
+# with the name of the service as api in this example
+%package api
+Summary:    OpenStack Example API service
+Group:      Applications/System
+
+Requires:   openstack-%{service}-common = %{version}-%{release}
+
+%description api
+
+%{common_desc}
 This package contains Example common files.
+
+This package contains OpenStack example service.
 
 %if 0%{?with_doc}
 %package doc
 Summary:        Example documentation
 
-BuildRequires: python-sphinx
-BuildRequires: python-openstackdocstheme
+BuildRequires: python3-sphinx
+BuildRequires: python3-openstackdocstheme
 
 %description doc
 %{common_desc}
 
 This package contains the documentation.
 %endif
+
 
 %prep
 # Required for tarball sources verification
@@ -117,23 +121,28 @@ This package contains the documentation.
 %autosetup -n %{service}-%{upstream_version} -S git
 
 # Let's handle dependencies ourseleves
-%py_req_cleanup
+rm -f requirements.txt
+rm -rf *{service}*.egg-info
 
 
 %build
-%py2_build
+%py3_build
+
+# Build default config file with oslo-config-generate if available
+PYTHONPATH=. oslo-config-generator --config-dir=etc/oslo-config-generator/
 
 %if 0%{?with_doc}
 # generate html docs
-%{__python2} setup.py build_sphinx -b html
+sphinx-build -b html doc/source doc/build/html
+
 # remove the sphinx-build leftovers
 rm -rf doc/build/html/.{doctrees,buildinfo}
 %endif
 # Generate i18n files
-%{__python2} setup.py compile_catalog -d build/lib/%{service}/locale
+%{__python3} setup.py compile_catalog -d build/lib/%{service}/locale
 
 %install
-%py2_install
+%py3_install
 
 # Setup directories
 install -d -m 755 %{buildroot}%{_datadir}/%{service}
@@ -144,9 +153,6 @@ install -d -m 755 %{buildroot}%{_localstatedir}/log/%{service}
 install -d -m 755 %{buildroot}%{_sysconfdir}/%{service}
 mv %{buildroot}/usr/etc/%{service}/* %{buildroot}%{_sysconfdir}/%{service}
 
-# Install dist conf
-install -p -D -m 640 %{SOURCE3} %{buildroot}%{_datadir}/%{service}/%{service}-dist.conf
-
 # Install logrotate
 install -p -D -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/logrotate.d/openstack-%{service}
 
@@ -155,15 +161,15 @@ install -p -D -m 644 %{SOURCE2} %{buildroot}%{_unitdir}/openstack-example-server
 
 # Install i18n .mo files (.po and .pot are not required)
 install -d -m 755 %{buildroot}%{_datadir}
-rm -f %{buildroot}%{python2_sitelib}/%{service}/locale/*/LC_*/%{service}*po
-rm -f %{buildroot}%{python2_sitelib}/%{service}/locale/*pot
-mv %{buildroot}%{python2_sitelib}/%{service}/locale %{buildroot}%{_datadir}/locale
+rm -f %{buildroot}%{python3_sitelib}/%{service}/locale/*/LC_*/%{service}*po
+rm -f %{buildroot}%{python3_sitelib}/%{service}/locale/*pot
+mv %{buildroot}%{python3_sitelib}/%{service}/locale %{buildroot}%{_datadir}/locale
 
 # Find language files
 %find_lang %{service} --all-name
 
 %check
-OS_TEST_PATH=./%{service}/tests/unit %{__python2} setup.py test
+stestr run
 
 %pre common
 getent group %{service} >/dev/null || groupadd -r %{service}
@@ -173,33 +179,24 @@ getent passwd %{service} >/dev/null || \
 exit 0
 
 
-%post
-%systemd_post openstack-example-server.service
+%post api
+%systemd_post openstack-example-api.service
 
-%preun
-%systemd_preun openstack-example-server.service
+%preun api
+%systemd_preun openstack-example-api.service
 
-%postun
-%systemd_postun_with_restart openstack-example-server.service
+%postun api
+%systemd_postun_with_restart openstack-example-api.service
 
-%files
+%files -n python3-%{service}
 %license LICENSE
-%{_bindir}/openstack-example-server
-%{_unitdir}/openstack-example-server.service
-%attr(-, root, %{service}) %{_sysconfdir}/%{service}/api-paste.ini
+%{python3_sitelib}/%{service}
+%{python3_sitelib}/%{service}-*.egg-info
+%exclude %{python3_sitelib}/%{service}/tests
 
-
-%files -n python-%{service}-tests-unit
+%files -n python3-%{service}-tests
 %license LICENSE
-%{python2_sitelib}/%{service}/tests-unit
-
-
-%files -n python-%{service}
-%license LICENSE
-%{python2_sitelib}/%{service}
-%{python2_sitelib}/%{service}-*.egg-info
-%exclude %{python2_sitelib}/%{service}/tests
-
+%{python3_sitelib}/%{service}/tests
 
 %files common -f %{service}.lang
 %license LICENSE
@@ -211,6 +208,12 @@ exit 0
 %attr(-, root, %{service}) %{_datadir}/%{service}/%{service}-dist.conf
 %dir %{_sharedstatedir}/%{service}
 %dir %attr(0750, %{service}, root) %{_localstatedir}/log/%{service}
+
+%files api
+%license LICENSE
+%{_bindir}/openstack-example-api
+%{_unitdir}/openstack-example-api.service
+%attr(-, root, %{service}) %{_sysconfdir}/%{service}/api-paste.ini
 
 %if 0%{?with_doc}
 %files doc
