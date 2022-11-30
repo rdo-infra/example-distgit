@@ -31,6 +31,9 @@ Source102:  https://releases.openstack.org/_static/%{sources_gpg_sign}.txt
 
 BuildArch:  noarch
 
+%description
+%{common_desc}
+
 %package -n python3-%{sclient}
 Summary:    OpenStack Example client
 %{?python_provide:%python_provide python3-%{sclient}}
@@ -64,7 +67,7 @@ Requires:       python3-stestr
 
 This package contains the example client test files.
 
-if 0%{?with_doc}
+%if 0%{?with_doc}
 %package -n python-%{sclient}-doc
 Summary:    OpenStack example client documentation
 
