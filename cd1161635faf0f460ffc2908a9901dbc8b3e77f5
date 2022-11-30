@@ -1,0 +1,9 @@
+Code-Review+1: User karolinku <kkula@redhat.com>
+Code-Review+2: Alfredo Moralejo <amoralej@redhat.com>
+Workflow+1: Alfredo Moralejo <amoralej@redhat.com>
+Verified+2: Zuul CI <zuul@review.rdoproject.org>
+Submitted-by: Zuul CI <zuul@review.rdoproject.org>
+Submitted-at: Wed, 30 Nov 2022 17:33:30 +0000
+Reviewed-on: https://review.rdoproject.org/r/c/rdo-infra/example-distgit/+/45828
+Project: rdo-infra/example-distgit
+Branch: refs/heads/rpm-master
